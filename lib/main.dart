@@ -17,7 +17,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late GoogleMapController mapController;
-  final MapType _currentMapType = MapType.normal;
+  late MapType _currentMapType = MapType.normal;
   final LatLng _center = const LatLng(45.5016889, -73.567256);
 
   void _onMapCreated(GoogleMapController controller) {
@@ -48,7 +48,7 @@ class _MyAppState extends State<MyApp> {
               alignment: Alignment.topRight,
               child: Column(
                 children: <Widget>[
-                  floatingButton(Icons.map, () {}),
+                  floatingButton(Icons.map, _changeMapType),
                   const SizedBox(height: 16.0),
                   floatingButton(Icons.add_location, () {}),
                 ],
@@ -58,6 +58,11 @@ class _MyAppState extends State<MyApp> {
         ],
       )
     );
+  }
+  void _changeMapType() {
+    setState(() {
+      _currentMapType = _currentMapType == MapType.normal ? MapType.hybrid : MapType.normal;
+    });
   }
 }
 
