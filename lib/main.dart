@@ -30,15 +30,46 @@ class _MyAppState extends State<MyApp> {
       appBar: AppBar(
         title: const Text('Google Maps'),
       ),
-      body: GoogleMap(
-        mapType: _currentMapType,
-        myLocationButtonEnabled: false,
-        onMapCreated: _onMapCreated,
-        initialCameraPosition: CameraPosition(
-          target: _center,
-          zoom: 14.0,
-        ),
-      ),
+      //Stack pour positionner les widgets les un par dessus les autres.
+      body: Stack(
+        children: [
+          GoogleMap(
+            mapType: _currentMapType,
+            myLocationButtonEnabled: false,
+            onMapCreated: _onMapCreated,
+            initialCameraPosition: CameraPosition(
+              target: _center,
+              zoom: 14.0,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Column(
+                children: <Widget>[
+                  floatingButton(Icons.map, () {}),
+                  const SizedBox(height: 16.0),
+                  floatingButton(Icons.add_location, () {}),
+                ],
+              ),
+            ),
+          ),
+        ],
+      )
     );
   }
+}
+
+Widget floatingButton(IconData buttonIcon, VoidCallback buttonFunction) {
+  return FloatingActionButton(
+    heroTag: null,
+    onPressed: buttonFunction,
+    materialTapTargetSize: MaterialTapTargetSize.padded,
+    backgroundColor: const Color(0xffFF0052),
+    child: Icon(
+      buttonIcon,
+      size: 36.0,
+    ),
+  );
 }
