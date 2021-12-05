@@ -19,6 +19,8 @@ class _MyAppState extends State<MyApp> {
   late GoogleMapController mapController;
   late MapType _currentMapType = MapType.normal;
   final LatLng _center = const LatLng(45.5016889, -73.567256);
+  final List<Marker> _markers = <Marker>[];
+  late LatLng _lastMapPosition;
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
@@ -34,6 +36,8 @@ class _MyAppState extends State<MyApp> {
       body: Stack(
         children: [
           GoogleMap(
+            onCameraMove: _onCameraMove,
+            markers: Set<Marker>.of(_markers,),
             mapType: _currentMapType,
             myLocationButtonEnabled: false,
             onMapCreated: _onMapCreated,
@@ -50,7 +54,7 @@ class _MyAppState extends State<MyApp> {
                 children: <Widget>[
                   floatingButton(Icons.map, _changeMapType),
                   const SizedBox(height: 16.0),
-                  floatingButton(Icons.add_location, () {}),
+                  floatingButton(Icons.add_location, _addMarker),
                 ],
               ),
             ),
@@ -62,6 +66,22 @@ class _MyAppState extends State<MyApp> {
   void _changeMapType() {
     setState(() {
       _currentMapType = _currentMapType == MapType.normal ? MapType.hybrid : MapType.normal;
+    });
+  }
+
+  void _onCameraMove(CameraPosition position) {
+    _lastMapPosition = position.target;
+  }
+
+  void _addMarker() {
+    var count = _markers.length + 1;
+    Marker newMarker = Marker(
+      markerId: MarkerId(count.toString()),
+      position: LatLng(_lastMapPosition.latitude, _lastMapPosition.longitude),
+      infoWindow: InfoWindow(title: 'Marqueur $count'),
+    );
+    setState(() {
+      _markers.add(newMarker);
     });
   }
 }
