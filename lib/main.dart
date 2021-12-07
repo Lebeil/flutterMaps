@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'add_page.dart';
 
-main() {
+//initialisation Firebase
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MaterialApp(
     title: 'Flutter Google Maps',
     debugShowCheckedModeBanner: false,
@@ -54,7 +60,7 @@ class _MyAppState extends State<MyApp> {
                 children: <Widget>[
                   floatingButton(Icons.map, _changeMapType),
                   const SizedBox(height: 16.0),
-                  floatingButton(Icons.add_location, _addMarker),
+                  floatingButton(Icons.add_location, _openPage),
                 ],
               ),
             ),
@@ -63,6 +69,7 @@ class _MyAppState extends State<MyApp> {
       )
     );
   }
+
   void _changeMapType() {
     setState(() {
       _currentMapType = _currentMapType == MapType.normal ? MapType.hybrid : MapType.normal;
@@ -71,6 +78,21 @@ class _MyAppState extends State<MyApp> {
 
   void _onCameraMove(CameraPosition position) {
     _lastMapPosition = position.target;
+  }
+
+  void _openPage() {
+    var lat = _lastMapPosition.latitude;
+    var long = _lastMapPosition.longitude;
+    print('position:' + lat.toString() + '/' + long.toString());
+    Route route = MaterialPageRoute(
+      builder: (context) => AddPage(lat, long),
+      fullscreenDialog: true,
+    );
+    Navigator.push(context, route).then(refreshMarkers);
+  }
+
+  void refreshMarkers(dynamic value) {
+    print("refresh");
   }
 
   void _addMarker() {
