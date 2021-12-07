@@ -4,6 +4,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'add_page.dart';
 
+FirebaseFirestore firestore = FirebaseFirestore.instance;
+CollectionReference housingRef = firestore.collection('Housing');
+QueryDocumentSnapshot? currentHousing;
+GlobalKey<_BottomSectionState> bottomKey = GlobalKey();
+
 //initialisation Firebase
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +33,13 @@ class _MyAppState extends State<MyApp> {
   final List<Marker> _markers = <Marker>[];
   late LatLng _lastMapPosition;
 
+  //Charger les marqueurs dès le lancement de notre application.
+  @override
+  void initState() {
+    super.initState();
+    getFirebaseMarkers();
+  }
+
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
   }
@@ -43,8 +55,9 @@ class _MyAppState extends State<MyApp> {
         children: [
           GoogleMap(
             onCameraMove: _onCameraMove,
-            markers: Set<Marker>.of(_markers,),
+            markers: Set<Marker>.of(_markers),
             mapType: _currentMapType,
+            zoomControlsEnabled: true,
             myLocationButtonEnabled: false,
             onMapCreated: _onMapCreated,
             initialCameraPosition: CameraPosition(
@@ -65,6 +78,7 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
           ),
+          BottomSection(key: bottomKey),
         ],
       )
     );
@@ -93,14 +107,33 @@ class _MyAppState extends State<MyApp> {
 
   void refreshMarkers(dynamic value) {
     print("refresh");
+    _markers.clear();
+    currentHousing = null;
+    getFirebaseMarkers();
+    setState((){});
   }
 
-  void _addMarker() {
-    var count = _markers.length + 1;
+  void getFirebaseMarkers() {
+    housingRef.get().then(
+          (QuerySnapshot querySnapshot) => {
+        for (var doc in querySnapshot.docs)
+          {
+            print('new marker'),
+            _addMarker(doc),
+          }
+      },
+    );
+  }
+
+  void _addMarker(QueryDocumentSnapshot markerInfo) {
     Marker newMarker = Marker(
-      markerId: MarkerId(count.toString()),
-      position: LatLng(_lastMapPosition.latitude, _lastMapPosition.longitude),
-      infoWindow: InfoWindow(title: 'Marqueur $count'),
+      markerId: MarkerId(markerInfo.id),
+      position: LatLng(markerInfo['lat'], markerInfo['lng']),
+      infoWindow: InfoWindow(title: markerInfo['price'] + ' €'),
+      onTap: () {
+        currentHousing = markerInfo;
+        bottomKey.currentState!.setState(() {});
+      },
     );
     setState(() {
       _markers.add(newMarker);
@@ -119,4 +152,104 @@ Widget floatingButton(IconData buttonIcon, VoidCallback buttonFunction) {
       size: 36.0,
     ),
   );
+}
+
+class BottomSection extends StatefulWidget {
+  const BottomSection({Key? key}) : super(key: key);
+  @override
+  _BottomSectionState createState() => _BottomSectionState();
+}
+
+class _BottomSectionState extends State<BottomSection> {
+  @override
+  Widget build(BuildContext context) {
+    if (currentHousing == null) {
+      return Container();
+    } else {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 30),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                height: 200,
+                width: double.infinity,
+                color: Colors.white,
+                child: Row(
+                  children: [
+                    Container(
+                      height: 200,
+                      width: 120,
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        image: DecorationImage(
+                          fit: BoxFit.cover,
+                          image: NetworkImage(currentHousing!['photoUrl']),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(10, 15, 10, 15),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              currentHousing!['description'],
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              style: TextStyle(
+                                  fontSize: 17, color: Colors.grey[600]),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              currentHousing!['title'],
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                              style: TextStyle(
+                                  fontSize: 20, color: Colors.grey[900]),
+                            ),
+                            const SizedBox(height: 10),
+                            Container(height: 1, width: 50, color: Colors.grey),
+                            const SizedBox(height: 10),
+                            Text(
+                              currentHousing!['equipment'],
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                              style: TextStyle(
+                                  fontSize: 15, color: Colors.grey[500]),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  currentHousing!['price'] + ' €',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      color: Colors.grey[900]),
+                                ),
+                                Text(
+                                  ' / nuit',
+                                  style: TextStyle(
+                                      fontSize: 20, color: Colors.grey[900]),
+                                ),
+                              ],
+                            )
+                          ],
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+          )
+        ],
+      );
+    }
+  }
 }

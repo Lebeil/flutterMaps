@@ -7,13 +7,12 @@ CollectionReference housingRef = firestore.collection('Housing');
 class AddPage extends StatelessWidget {
   final double lat;
   final double lng;
-  AddPage(this.lng, this.lat, {Key? key}) : super(key: key);
+  AddPage(this.lat, this.lng, {Key? key}) : super(key: key);
   final titleField = TextEditingController();
   final descriptionField = TextEditingController();
   final equipmentField = TextEditingController();
   final photoField = TextEditingController();
   final priceField = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,8 +25,8 @@ class AddPage extends StatelessWidget {
         child: Column(
           children: [
             const Text('Ajouter un logement'),
-            Text('Latitude:' + lat.toString()),
-            Text('Longitude' + lng.toString()),
+            Text('Latitude: ' + lat.toString()),
+            Text('Longitude: ' + lng.toString()),
             TextField(
               controller: titleField,
               decoration: const InputDecoration(
@@ -59,7 +58,6 @@ class AddPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -70,9 +68,9 @@ class AddPage extends StatelessWidget {
                 onPressed: () => addHousing(context),
               ),
             ),
-          ]
-        )
-      )
+          ],
+        ),
+      ),
     );
   }
 
